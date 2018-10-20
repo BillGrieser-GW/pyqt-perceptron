@@ -8,7 +8,9 @@ from matplotlib.figure import Figure
 from matplotlib.backends.backend_qt4agg import FigureCanvasQTAgg as FigureCanvas
 
 # The transfer function
-hardlims = lambda n: -1 if n < 0 else 1
+hardlim = lambda n: 0 if n < 0 else 1
+POS = 1
+NEG = 0
 
 # =============================================================================
 # Perceptron Class
@@ -18,12 +20,12 @@ class SingleNeuronPerceptron():
     def __init__(self, R=2, S=1):
         
         self.R = R # Num input dimensions
-        self.Weights = np.random.random(self.R) * 10
-        self.bias=np.random.random(S)
+        self.S = S # Num neurons
+        self.initialize_weights()
         
     def run_forward(self, p):
         """Given an input of dimension R, run the network"""
-        return hardlims(self.Weights @ p + self.bias )
+        return hardlim(self.Weights @ p + self.bias )
     
     def train_one_iteration(self, p, t):
         """Given one input of dimension R and its target, perform one training iteration.
@@ -43,6 +45,10 @@ class SingleNeuronPerceptron():
         boundary"""
         return -(x * self.Weights[0] + self.bias) / \
             (self.Weights[1] if self.Weights[1] != 0 else .000001)
+            
+    def initialize_weights(self):
+        self.Weights = np.random.random(self.R) * 10
+        self.bias=np.random.random(self.S) * 10
 
 # =============================================================================
 # Main GUI
@@ -105,33 +111,37 @@ class PerceptronDemo(QtGui.QMainWindow):
         self.setCentralWidget(self.frame)
             
     def draw_data(self):
-        self.pos_line.set_data([x[0] for x in self.data if x[2] == 1], [y[1] for y in self.data if y[2] == 1])
-        self.neg_line.set_data([x[0] for x in self.data if x[2] == -1], [y[1] for y in self.data if y[2] == -1])
+        self.pos_line.set_data([x[0] for x in self.data if x[2] == POS], [y[1] for y in self.data if y[2] == POS])
+        self.neg_line.set_data([x[0] for x in self.data if x[2] == NEG], [y[1] for y in self.data if y[2] == NEG])
         self.plot_canvas.draw()
     
     def draw_decision_boundary(self):
         lim = self.axes.get_xlim()
         X = np.linspace(lim[0], lim[1], 101)
         Y = self.net.find_decision_boundary(X)
-        #print(X)
-        #print(Y)
         self.decision.set_data(X,Y)
+        self.plot_canvas.draw()
+        
+    def clear_decision_boundary(self):
+        self.decision.set_data([], [])
         self.plot_canvas.draw()
         
     def on_mouseclick(self, event):
         """Add an item to the plot"""
         if event.xdata != None and event.xdata != None:
-            self.data.append((event.xdata, event.ydata, 1 if event.button == 1 else -1))
+            self.data.append((event.xdata, event.ydata, POS if event.button == 1 else NEG))
             self.draw_data()
         
     def on_reset(self):
         self.data = []
+        self.clear_decision_boundary()
+        self.net.initialize_weights()
         self.draw_data()
         
     def on_run(self):
         
         # Do 10 epochs
-        for epoch in range(100):
+        for epoch in range(10):
             
             for d in self.data:
                 self.net.train_one_iteration(np.array(d[0:2]), d[2])
