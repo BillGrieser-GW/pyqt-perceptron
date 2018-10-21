@@ -25,7 +25,7 @@ class SingleNeuronPerceptron():
         
     def run_forward(self, p):
         """Given an input of dimension R, run the network"""
-        return hardlim(self.Weights @ p + self.bias )
+        return hardlim(self.Weights.dot(p) + self.bias )
     
     def train_one_iteration(self, p, t):
         """Given one input of dimension R and its target, perform one training iteration.
@@ -136,6 +136,7 @@ class PerceptronDemo(QtGui.QMainWindow):
         if event.xdata != None and event.xdata != None:
             self.data.append((event.xdata, event.ydata, POS if event.button == 1 else NEG))
             self.draw_data()
+            self.current_status.setText("x={0:0.2f} y={1:0.2f}".format(event.xdata, event.ydata))
         
     def on_reset(self):
         self.data = []
@@ -148,15 +149,23 @@ class PerceptronDemo(QtGui.QMainWindow):
         
         # Do 10 epochs
         for epoch in range(10):
-            total_error = 0
+           
             self.total_epochs += 1
             
             training = self.data.copy()
             np.random.shuffle(training)
             for d in training:
-                total_error += abs(self.net.train_one_iteration(np.array(d[0:2]), d[2]))
+                self.net.train_one_iteration(np.array(d[0:2]), d[2])
+                
+            # Calculate the error for the epoch
+            self.all_t_hat = np.array([self.net.run_forward(np.array(xy[0:2])) for xy in self.data])
+            total_error = abs(np.array([t[2] for t in self.data]) - self.all_t_hat).sum()
             
-        print("Epoch:", self.total_epochs, "Error is:", total_error)
+            if total_error == 0:
+                break
+            
+        # print("Epoch:", self.total_epochs, "Error is:", total_error)
+        self.current_status.setText("Epoch: {0} Error: {1}".format(self.total_epochs, total_error))
             
         self.draw_decision_boundary()
         
