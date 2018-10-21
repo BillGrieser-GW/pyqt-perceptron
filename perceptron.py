@@ -33,7 +33,7 @@ class SingleNeuronPerceptron():
        
         t_hat = self.run_forward(p)
         self.error = t - t_hat
-        print(p, t, t_hat, self.error)
+        #print(p, t, t_hat, self.error)
         
         # Adjust weights and bias based on the error from this iteration
         self.Weights = self.Weights + self.error * p.T
@@ -64,6 +64,7 @@ class PerceptronDemo(QtGui.QMainWindow):
         self.setGeometry(100,100, 640,480)
         self.data = []
         self.data = []
+        self.total_epochs = 0
         self.net = SingleNeuronPerceptron()
         
     def create_plot(self):
@@ -81,8 +82,8 @@ class PerceptronDemo(QtGui.QMainWindow):
         self.pos_line, = self.axes.plot([], 'mo', label="Cat")
         self.neg_line, = self.axes.plot([], 'cs', label="Bear")
         self.decision, = self.axes.plot([], 'r-', label="Decision Boundary")
-        self.axes.legend(loc='lower center', fontsize=8, framealpha=0.5, 
-                         numpoints=1, ncol=3)
+        self.axes.legend(loc='lower right', fontsize=8, framealpha=0.5, 
+                         numpoints=1, ncol=1)
         self.axes.set_title("Single Neuron Perceptron")
         self.plot_canvas.draw()
         
@@ -96,11 +97,13 @@ class PerceptronDemo(QtGui.QMainWindow):
     def layout_window(self):
         self.run_button = QtGui.QPushButton("Run")
         self.connect(self.run_button, QtCore.SIGNAL('clicked()'), self.on_run)
+        self.rerun_button = QtGui.QPushButton("Re-Run")
+        self.connect(self.rerun_button, QtCore.SIGNAL('clicked()'), self.on_rerun)
         self.clear_button = QtGui.QPushButton("Reset")
         self.connect(self.clear_button, QtCore.SIGNAL('clicked()'), self.on_reset)
        
         controls = QtGui.QVBoxLayout()
-        for w in (self.run_button, self.clear_button):
+        for w in (self.run_button, self.rerun_button, self.clear_button):
             controls.addWidget(w)
             controls.setAlignment(w, QtCore.Qt.AlignHCenter)
             
@@ -136,19 +139,29 @@ class PerceptronDemo(QtGui.QMainWindow):
         self.data = []
         self.clear_decision_boundary()
         self.net.initialize_weights()
+        self.total_epochs = 0
         self.draw_data()
         
     def on_run(self):
         
         # Do 10 epochs
         for epoch in range(10):
+            total_error = 0
+            self.total_epochs += 1
             
-            for d in self.data:
-                self.net.train_one_iteration(np.array(d[0:2]), d[2])
+            training = self.data.copy()
+            np.random.shuffle(training)
+            for d in training:
+                total_error += abs(self.net.train_one_iteration(np.array(d[0:2]), d[2]))
             
-            print("Epoch:", epoch, "Error is:", self.net.error)
+        print("Epoch:", self.total_epochs, "Error is:", total_error)
             
         self.draw_decision_boundary()
+        
+    def on_rerun(self):
+        self.net.initialize_weights()
+        self.total_epochs = 0
+        self.on_run()
         
         
 if __name__ == "__main__":
