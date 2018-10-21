@@ -99,11 +99,13 @@ class PerceptronDemo(QtGui.QMainWindow):
         self.connect(self.run_button, QtCore.SIGNAL('clicked()'), self.on_run)
         self.rerun_button = QtGui.QPushButton("Re-Run")
         self.connect(self.rerun_button, QtCore.SIGNAL('clicked()'), self.on_rerun)
+        self.undo_click_button = QtGui.QPushButton("Undo Last Mouse Click")
+        self.connect(self.undo_click_button, QtCore.SIGNAL('clicked()'), self.on_undo_mouseclick)
         self.clear_button = QtGui.QPushButton("Reset")
         self.connect(self.clear_button, QtCore.SIGNAL('clicked()'), self.on_reset)
        
         controls = QtGui.QVBoxLayout()
-        for w in (self.run_button, self.rerun_button, self.clear_button):
+        for w in (self.run_button, self.rerun_button, self.undo_click_button, self.clear_button):
             controls.addWidget(w)
             controls.setAlignment(w, QtCore.Qt.AlignHCenter)
             
@@ -162,6 +164,11 @@ class PerceptronDemo(QtGui.QMainWindow):
         self.net.initialize_weights()
         self.total_epochs = 0
         self.on_run()
+    
+    def on_undo_mouseclick(self):
+        if len(self.data) > 1:
+            self.data.pop()
+            self.draw_data()
         
         
 if __name__ == "__main__":
