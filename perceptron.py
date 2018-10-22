@@ -47,8 +47,8 @@ class SingleNeuronPerceptron():
             (self.Weights[1] if self.Weights[1] != 0 else .000001)
             
     def initialize_weights(self):
-        self.Weights = np.random.random(self.R) * 10
-        self.bias=np.random.random(self.S) * 10
+        self.Weights = (np.random.random(self.R) - 0.5) * 20
+        self.bias = (np.random.random(self.S) - 0.5) * 20
 
 # =============================================================================
 # Main GUI
@@ -61,7 +61,7 @@ class PerceptronDemo(QtGui.QMainWindow):
         self.create_plot()
         self.layout_window()
         self.create_status_bar()   
-        self.setGeometry(50,50, 680,480)
+        self.setGeometry(50,50, 680,600)
         self.data = []
         self.data = []
         self.total_epochs = 0
@@ -69,21 +69,20 @@ class PerceptronDemo(QtGui.QMainWindow):
         
     def create_plot(self):
         
-        self.plot_figure = Figure((8.0, 6.0), dpi=100)
+        self.plot_figure = Figure((6.0, 6.0), dpi=100)
         self.plot_canvas = FigureCanvas(self.plot_figure)
         self.plot_canvas.setParent(self.frame)
-        #self.plot_canvas.setGeometry(0,0,5,900)
-        
+       
         # Add a plot
         self.axes = self.plot_figure.add_subplot(111)
         self.plot_figure.subplots_adjust(bottom=0.2, left=0.1)
         self.axes.set_xlim(0,10)
         self.axes.set_ylim(0,10)
         self.axes.tick_params(labelsize=8)
-        self.axes.set_xlabel("Width", fontsize=10)
-        self.axes.set_ylabel("Height", fontsize=10)
-        self.pos_line, = self.axes.plot([], 'mo', label="Cat")
-        self.neg_line, = self.axes.plot([], 'cs', label="Bear")
+        self.axes.set_xlabel("$p^1$", fontsize=10)
+        self.axes.set_ylabel("$p^2$", fontsize=10)
+        self.pos_line, = self.axes.plot([], 'mo', label="Positive Class")
+        self.neg_line, = self.axes.plot([], 'cs', label="Negative Class")
         self.decision, = self.axes.plot([], 'r-', label="Decision Boundary")
         self.axes.legend(loc='lower center', fontsize=8, framealpha=0.9, 
                          numpoints=1, ncol=3, bbox_to_anchor=(0, -.24, 1, -.280), mode='expand')
@@ -98,23 +97,31 @@ class PerceptronDemo(QtGui.QMainWindow):
         self.statusBar().addWidget(self.current_status, 1)
         
     def layout_window(self):
+        explain = QtGui.QLabel("On the plot, click the: <ul><li><b>Primary mouse button</b> to add a positive class</li><li><b>Secondary mouse button</b> to add a negative class</li></ul>\n" +
+                               "Then click <b>Run</b> to start a training run. The training run will stop when the error goes to 0 or when the epoch limit is reached.")
+        
         self.run_button = QtGui.QPushButton("Run")
         self.connect(self.run_button, QtCore.SIGNAL('clicked()'), self.on_run)
-        self.rerun_button = QtGui.QPushButton("Re-Run")
-        self.connect(self.rerun_button, QtCore.SIGNAL('clicked()'), self.on_rerun)
+        self.rerun_button = QtGui.QPushButton("Reset to Start")
+        self.connect(self.rerun_button, QtCore.SIGNAL('clicked()'), self.on_reset)
         self.undo_click_button = QtGui.QPushButton("Undo Last Mouse Click")
         self.connect(self.undo_click_button, QtCore.SIGNAL('clicked()'), self.on_undo_mouseclick)
-        self.clear_button = QtGui.QPushButton("Reset")
-        self.connect(self.clear_button, QtCore.SIGNAL('clicked()'), self.on_reset)
+        self.clear_button = QtGui.QPushButton("Clear Data")
+        self.connect(self.clear_button, QtCore.SIGNAL('clicked()'), self.on_clear)
        
-        controls = QtGui.QVBoxLayout()
+        control_panel = QtGui.QVBoxLayout()
         for w in (self.run_button, self.rerun_button, self.undo_click_button, self.clear_button):
-            controls.addWidget(w)
-            controls.setAlignment(w, QtCore.Qt.AlignHCenter)
+            control_panel.addWidget(w)
+            #control_panel.setAlignment(w, QtCore.Qt.AlignHCenter)
             
+        plot_panel = QtGui.QVBoxLayout()
+        plot_panel.addWidget(explain)
+        plot_panel.addWidget(self.plot_canvas)
+        
+        
         hbox = QtGui.QHBoxLayout()
-        hbox.addWidget(self.plot_canvas)
-        hbox.addLayout(controls)
+        hbox.addLayout(plot_panel)
+        hbox.addLayout(control_panel)
         self.frame.setLayout(hbox)
         self.setCentralWidget(self.frame)
             
@@ -141,7 +148,7 @@ class PerceptronDemo(QtGui.QMainWindow):
             self.draw_data()
             self.current_status.setText("x={0:0.2f} y={1:0.2f}".format(event.xdata, event.ydata))
         
-    def on_reset(self):
+    def on_clear(self):
         self.data = []
         self.clear_decision_boundary()
         self.net.initialize_weights()
@@ -172,10 +179,10 @@ class PerceptronDemo(QtGui.QMainWindow):
             
         self.draw_decision_boundary()
         
-    def on_rerun(self):
+    def on_reset(self):
         self.net.initialize_weights()
         self.total_epochs = 0
-        self.on_run()
+        self.clear_decision_boundary()
     
     def on_undo_mouseclick(self):
         if len(self.data) > 1:
