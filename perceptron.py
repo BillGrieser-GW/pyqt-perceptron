@@ -97,8 +97,25 @@ class PerceptronDemo(QtGui.QMainWindow):
         self.statusBar().addWidget(self.current_status, 1)
         
     def layout_window(self):
-        explain = QtGui.QLabel("On the plot, click the: <ul><li><b>Primary mouse button</b> to add a positive class</li><li><b>Secondary mouse button</b> to add a negative class</li></ul>\n" +
+        explain = QtGui.QLabel("On the plot, click the: <ul><li><b>Primary mouse button</b> to add a positive class observation</li>" +
+                               "<li><b>Secondary mouse button</b> to add a negative class observation</li></ul>\n" +
                                "Then click <b>Run</b> to start a training run. The training run will stop when the error goes to 0 or when the epoch limit is reached.")
+        
+        epoch_font = QtGui.QFont("Courier", 14, QtGui.QFont.Bold) 
+        epoch_label = QtGui.QLabel("Epochs so far:")
+        epoch_label.setFixedHeight(20)
+        self.epoch_display = QtGui.QLabel("---")
+        self.epoch_display.setFixedHeight(25)
+        self.epoch_display.setFont(epoch_font)
+        error_label = QtGui.QLabel("Error:")
+        error_label.setFixedHeight(20)
+        self.error_display = QtGui.QLabel("---")
+        self.error_display.setFixedHeight(25)
+        self.error_display.setFont(epoch_font)
+        epr_label = QtGui.QLabel("Max Epochs per run:")
+        self.epochs_per_run = QtGui.QComboBox()
+        self.epochs_per_run.addItems(["1", "10", "100", "1000"])
+        self.epochs_per_run.setCurrentIndex(2)
         
         self.run_button = QtGui.QPushButton("Run")
         self.connect(self.run_button, QtCore.SIGNAL('clicked()'), self.on_run)
@@ -109,20 +126,27 @@ class PerceptronDemo(QtGui.QMainWindow):
         self.clear_button = QtGui.QPushButton("Clear Data")
         self.connect(self.clear_button, QtCore.SIGNAL('clicked()'), self.on_clear)
        
+        # Control
         control_panel = QtGui.QVBoxLayout()
-        for w in (self.run_button, self.rerun_button, self.undo_click_button, self.clear_button):
+        for w in (epoch_label, self.epoch_display, error_label, self.error_display, epr_label, \
+                  self.epochs_per_run, self.run_button, self.rerun_button, self.undo_click_button, \
+                  self.clear_button):
             control_panel.addWidget(w)
             #control_panel.setAlignment(w, QtCore.Qt.AlignHCenter)
-            
+        control_panel.addStretch(10)
+        # Plot
         plot_panel = QtGui.QVBoxLayout()
-        plot_panel.addWidget(explain)
+        #plot_panel.addWidget(explain)
         plot_panel.addWidget(self.plot_canvas)
         
-        
+        # Main window
         hbox = QtGui.QHBoxLayout()
         hbox.addLayout(plot_panel)
         hbox.addLayout(control_panel)
-        self.frame.setLayout(hbox)
+        vbox=QtGui.QVBoxLayout()
+        vbox.addLayout(hbox)
+        vbox.addWidget(explain)
+        self.frame.setLayout(vbox)
         self.setCentralWidget(self.frame)
             
     def draw_data(self):
@@ -153,12 +177,21 @@ class PerceptronDemo(QtGui.QMainWindow):
         self.clear_decision_boundary()
         self.net.initialize_weights()
         self.total_epochs = 0
+        self.update_run_status()
         self.draw_data()
         
+    def update_run_status(self):
+        if self.total_epochs == 0:
+            self.epoch_display.setText("---")
+            self.error_display.setText("---")
+        else:
+            self.epoch_display.setText(str(self.total_epochs))
+            self.error_display.setText(str(self.total_error))
+            
     def on_run(self):
         
         # Do 10 epochs
-        for epoch in range(10):
+        for epoch in range(int(self.epochs_per_run.currentText())):
            
             self.total_epochs += 1
             
@@ -169,19 +202,20 @@ class PerceptronDemo(QtGui.QMainWindow):
                 
             # Calculate the error for the epoch
             self.all_t_hat = np.array([self.net.run_forward(np.array(xy[0:2])) for xy in self.data])
-            total_error = abs(np.array([t[2] for t in self.data]) - self.all_t_hat).sum()
+            self.total_error = abs(np.array([t[2] for t in self.data]) - self.all_t_hat).sum()
             
-            if total_error == 0:
+            if self.total_error == 0:
                 break
             
         # print("Epoch:", self.total_epochs, "Error is:", total_error)
-        self.current_status.setText("Epoch: {0} Error: {1}".format(self.total_epochs, total_error))
-            
+        self.current_status.setText("Epoch: {0} Error: {1}".format(self.total_epochs, self.total_error))
+        self.update_run_status()
         self.draw_decision_boundary()
         
     def on_reset(self):
         self.net.initialize_weights()
         self.total_epochs = 0
+        self.update_run_status()
         self.clear_decision_boundary()
     
     def on_undo_mouseclick(self):
