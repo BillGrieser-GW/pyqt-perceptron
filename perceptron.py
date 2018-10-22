@@ -79,6 +79,7 @@ class PerceptronDemo(QtGui.QMainWindow):
         self.plot_figure.subplots_adjust(bottom=0.2, left=0.1)
         self.axes.set_xlim(0,10)
         self.axes.set_ylim(0,10)
+        self.axes.tick_params(labelsize=8)
         self.axes.set_xlabel("Width", fontsize=10)
         self.axes.set_ylabel("Height", fontsize=10)
         self.pos_line, = self.axes.plot([], 'mo', label="Cat")
