@@ -61,7 +61,7 @@ class PerceptronDemo(QtGui.QMainWindow):
         self.create_plot()
         self.layout_window()
         self.create_status_bar()   
-        self.setGeometry(100,100, 640,480)
+        self.setGeometry(50,50, 680,480)
         self.data = []
         self.data = []
         self.total_epochs = 0
@@ -69,12 +69,14 @@ class PerceptronDemo(QtGui.QMainWindow):
         
     def create_plot(self):
         
-        self.plot_figure = Figure((6.0, 4.0), dpi=100)
+        self.plot_figure = Figure((8.0, 6.0), dpi=100)
         self.plot_canvas = FigureCanvas(self.plot_figure)
         self.plot_canvas.setParent(self.frame)
+        #self.plot_canvas.setGeometry(0,0,5,900)
         
         # Add a plot
         self.axes = self.plot_figure.add_subplot(111)
+        self.plot_figure.subplots_adjust(bottom=0.2, left=0.1)
         self.axes.set_xlim(0,10)
         self.axes.set_ylim(0,10)
         self.axes.set_xlabel("Width", fontsize=10)
@@ -82,8 +84,8 @@ class PerceptronDemo(QtGui.QMainWindow):
         self.pos_line, = self.axes.plot([], 'mo', label="Cat")
         self.neg_line, = self.axes.plot([], 'cs', label="Bear")
         self.decision, = self.axes.plot([], 'r-', label="Decision Boundary")
-        self.axes.legend(loc='lower right', fontsize=8, framealpha=0.5, 
-                         numpoints=1, ncol=1)
+        self.axes.legend(loc='lower center', fontsize=8, framealpha=0.9, 
+                         numpoints=1, ncol=3, bbox_to_anchor=(0, -.24, 1, -.280), mode='expand')
         self.axes.set_title("Single Neuron Perceptron")
         self.plot_canvas.draw()
         
