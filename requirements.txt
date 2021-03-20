@@ -22,7 +22,7 @@ idna==2.0
 ipython==6.5.0
 ipython-genutils==0.2.0
 jedi==0.12.1
-Jinja2==2.8
+Jinja2==2.11.3
 jsonpatch==1.10
 jsonpointer==1.9
 Keras==2.2.2
